@@ -5,7 +5,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.transaction.annotation.Transactional;
 import top.zephyrs.xflow.data.ConfigDAO;
 import top.zephyrs.xflow.data.ConfigPublishDAO;
-import top.zephyrs.xflow.data.keys.XFlowKeySnowflake;
 import top.zephyrs.xflow.entity.Query;
 import top.zephyrs.xflow.entity.config.*;
 import top.zephyrs.xflow.enums.EdgeTypeEnum;
@@ -24,13 +23,11 @@ public class ConfigService {
     private final ConfigDAO configMapper;
 
     private final ConfigPublishDAO publishMapper;
-    private final XFlowKeySnowflake snowflake;
 
     public ConfigService(ConfigDAO configMapper,
-                         ConfigPublishDAO publishMapper, XFlowKeySnowflake snowflake) {
+                         ConfigPublishDAO publishMapper) {
         this.configMapper = configMapper;
         this.publishMapper = publishMapper;
-        this.snowflake = snowflake;
     }
 
     public Config getConfigInfoById(Long configId) {
@@ -64,13 +61,12 @@ public class ConfigService {
      * @return 后续节点集合
      */
     public List<ConfigNode> getNextNodes(ConfigPublish publish, String nodeId, EdgeTypeEnum type, Map<String, Object> data) {
-        Config config = publish.getConfig();
         //筛选出符合条件的后续节点
         Set<String> nextTargets = publish.getConfig().getEdges().stream()
                 .filter(edge -> edge.getSource().equals(nodeId) && edge.getType() == type)
                 .map(ConfigEdge::getTarget)
                 .collect(Collectors.toSet());
-        List<ConfigNode> allNextNodes = config.getNodes().stream().filter(node -> nextTargets.contains(node.getId())).collect(Collectors.toList());
+        List<ConfigNode> allNextNodes = publish.getConfig().getNodes().stream().filter(node -> nextTargets.contains(node.getId())).collect(Collectors.toList());
         List<ConfigNode> nextNodes = new ArrayList<>();
         for (ConfigNode nextLink : allNextNodes) {
             String condition = nextLink.getData().getConditional();
@@ -107,12 +103,10 @@ public class ConfigService {
             }
         }
         if (config.getConfigId() == null) {
-            config.setConfigId(snowflake.nextId());
             configMapper.insert(config);
         } else {
             exists = configMapper.selectById(config.getConfigId());
             if (exists == null) {
-                config.setConfigId(snowflake.nextId());
                 configMapper.insert(config);
             } else {
                 configMapper.updateById(config);
@@ -136,7 +130,6 @@ public class ConfigService {
         publish.setVersion(String.valueOf(version));
         publish.setConfig(info);
         publish.setActive(true);
-        publish.setPublishId(snowflake.nextId());
         publishMapper.insert(publish);
     }
 

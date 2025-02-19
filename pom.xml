@@ -15,11 +15,19 @@
 
   <modules>
     <module>xflow-core</module>
-    <module>xflow-data-mybatis</module>
+    <module>xflow-data-semi</module>
     <module>xflow-spring-boot-starter</module>
+      <module>xflow-web</module>
+    <module>xflow-base</module>
+      <module>xflow-mvc-web</module>
   </modules>
   <dependencyManagement>
     <dependencies>
+      <dependency>
+        <groupId>top.zephyrs</groupId>
+        <artifactId>xflow-base</artifactId>
+        <version>1.0-SNAPSHOT</version>
+      </dependency>
       <dependency>
         <groupId>top.zephyrs</groupId>
         <artifactId>xflow-core</artifactId>
@@ -27,7 +35,7 @@
       </dependency>
       <dependency>
         <groupId>top.zephyrs</groupId>
-        <artifactId>xflow-data-mybatis</artifactId>
+        <artifactId>xflow-data-semi</artifactId>
         <version>${xflow-version}</version>
       </dependency>
       <dependency>
@@ -42,8 +50,13 @@
       </dependency>
       <dependency>
         <groupId>org.mybatis</groupId>
+        <artifactId>mybatis</artifactId>
+        <version>3.5.16</version>
+      </dependency>
+      <dependency>
+        <groupId>org.mybatis</groupId>
         <artifactId>mybatis-spring</artifactId>
-        <version>3.0.4</version>
+        <version>2.1.2</version>
       </dependency>
 
       <dependency>
@@ -73,6 +86,26 @@
       </dependency>
 
       <dependency>
+        <groupId>top.zephyrs</groupId>
+        <artifactId>mybatis-semi-core</artifactId>
+        <version>1.1.1</version>
+      </dependency>
+
+
+
+      <dependency>
+        <groupId>io.swagger.core.v3</groupId>
+        <artifactId>swagger-annotations</artifactId>
+        <version>2.1.2</version>
+      </dependency>
+
+      <dependency>
+        <groupId>io.swagger.core.v3</groupId>
+        <artifactId>swagger-annotations-jakarta</artifactId>
+        <version>2.2.19</version>
+      </dependency>
+
+      <dependency>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter</artifactId>
         <version>3.0.0</version>
@@ -81,6 +114,16 @@
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-configuration-processor</artifactId>
         <version>3.0.0</version>
+      </dependency>
+      <dependency>
+        <groupId>com.github.pagehelper</groupId>
+        <artifactId>pagehelper-spring-boot-starter</artifactId>
+        <version>2.1.0</version>
+      </dependency>
+      <dependency>
+        <groupId>com.github.xiaoymin</groupId>
+        <artifactId>knife4j-openapi3-jakarta-spring-boot-starter</artifactId>
+        <version>4.4.0</version>
       </dependency>
     </dependencies>
   </dependencyManagement>
@@ -97,6 +140,5 @@
         </plugin>
       </plugins>
     </pluginManagement>
-
   </build>
 </project>

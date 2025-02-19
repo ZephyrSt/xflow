@@ -1,7 +1,6 @@
 package top.zephyrs.xflow.service;
 
 import top.zephyrs.xflow.data.*;
-import top.zephyrs.xflow.data.keys.XFlowKeySnowflake;
 import top.zephyrs.xflow.entity.config.ConfigNode;
 import top.zephyrs.xflow.entity.config.ConfigPublish;
 import top.zephyrs.xflow.entity.flow.*;
@@ -14,6 +13,7 @@ import top.zephyrs.xflow.enums.TaskTypeEnum;
 import top.zephyrs.xflow.exceptions.FlowStatusNotSupportsException;
 import top.zephyrs.xflow.exceptions.InvalidFlowException;
 import top.zephyrs.xflow.exceptions.InvalidUserException;
+import top.zephyrs.xflow.exceptions.TaskNotClaimedException;
 import top.zephyrs.xflow.utils.BeanUtils;
 
 import java.util.*;
@@ -28,21 +28,19 @@ public class FlowDataService {
 
     private final FlowEventService flowEventService;
 
-    private final XFlowKeySnowflake snowflake;
 
     public FlowDataService(FlowDAO flowMapper,
                            NodeCurrentDAO nodeCurrentMapper,
                            NodeCurrentLogDAO nodeLogMapper,
                            TaskDAO taskMapper,
                            TaskLogDAO taskLogMapper,
-                           FlowEventService flowEventService, XFlowKeySnowflake snowflake) {
+                           FlowEventService flowEventService) {
         this.flowMapper = flowMapper;
         this.nodeCurrentMapper = nodeCurrentMapper;
         this.nodeLogMapper = nodeLogMapper;
         this.taskMapper = taskMapper;
         this.taskLogMapper = taskLogMapper;
         this.flowEventService = flowEventService;
-        this.snowflake = snowflake;
     }
 
     /**
@@ -90,77 +88,6 @@ public class FlowDataService {
     }
 
     /**
-     * 获取待办节点
-     *
-     * @param currentId 待办节点ID
-     * @return 待办节点
-     */
-    public FlowNodeCurrent getCurrentById(Long currentId) {
-        return nodeCurrentMapper.selectById(currentId);
-    }
-
-
-    /**
-     * 查询待办任务
-     *
-     * @param taskId ID
-     * @return 待办记录
-     */
-    public FlowTask getTaskById(Long taskId) {
-        return taskMapper.selectById(taskId);
-    }
-
-    /**
-     * 查询未办结节点的待办
-     *
-     * @param currentId 未办结节点的ID
-     * @return 待办任务列表
-     */
-    public List<FlowTask> getTasksByCurrentId(Long currentId) {
-        return taskMapper.selectByCurrentId(currentId);
-    }
-
-    /**
-     * 查询已完成待办记录
-     *
-     * @param taskId
-     * @return
-     */
-    public FlowTaskLog getTaskLogById(Long taskId) {
-        return taskLogMapper.selectById(taskId);
-    }
-
-    /**
-     * 查询节点的已办记录
-     *
-     * @param currentId
-     * @return
-     */
-    public List<FlowTaskLog> getTaskLogsByCurrentId(Long currentId) {
-        return taskLogMapper.selectByCurrentId(currentId);
-    }
-
-    /**
-     * 查询流程的全部待办任务
-     *
-     * @param flowId
-     * @return
-     */
-    public List<FlowTask> getTasksByFlowId(Long flowId) {
-        return taskMapper.selectByFlowId(flowId);
-    }
-
-    /**
-     * 查询流程的全部已办任务
-     *
-     * @param flowId
-     * @return
-     */
-    public List<FlowTaskLog> getTaskLogsByFlowId(Long flowId) {
-        return taskLogMapper.selectByFlowId(flowId);
-    }
-
-    /**
      * 创建业务流程，
      * 根据 流程ID 和 bizId 确认记录是否存在。
      * 如果不存在，则新建
@@ -183,7 +110,6 @@ public class FlowDataService {
             flow.setBizId(bizId);
             flow.setConfigId(publish.getConfigId());
             flow.setPublishId(publish.getPublishId());
-            flow.setFlowId(snowflake.nextId());
             flowMapper.insert(flow);
             flowEventService.flowCreated(flow);
             return flow;
@@ -216,9 +142,19 @@ public class FlowDataService {
     }
 
     /**
+     * 获取待办节点
+     *
+     * @param currentId 待办节点ID
+     * @return 待办节点
+     */
+    public FlowNodeCurrent getCurrentById(Long currentId) {
+        return nodeCurrentMapper.selectById(currentId);
+    }
+
+    /**
      * 创建待办节点
      */
-    public FlowNodeCurrent createCurrent(Long flowId, ConfigNode node, boolean needClaimed) {
+    public FlowNodeCurrent createCurrent(Long flowId, Long prevId, ConfigNode node, Integer voteTotal, boolean needClaimed) {
         //校验是否存在
         FlowNodeCurrent exists = nodeCurrentMapper.selectByFlowIdAndNodeId(flowId, node.getId());
         if (exists != null) {
@@ -227,14 +163,97 @@ public class FlowDataService {
         //创建待办节点信息
         FlowNodeCurrent current = new FlowNodeCurrent();
         current.setFlowId(flowId);
+        current.setPrevId(prevId);
         current.setNodeId(node.getId());
         current.setNodeTitle(node.getData().getTitle());
         current.setNodeType(node.getType());
         current.setStatus(needClaimed ? NodeStatusEnum.unclaimed : NodeStatusEnum.flowing);
-        current.setCurrentId(snowflake.nextId());
+        current.setTicketTotal(voteTotal);
         nodeCurrentMapper.insert(current);
         flowEventService.nodeCreated(current);
         return current;
+    }
+
+
+
+
+
+    /**
+     * 获取审批节点历史
+     */
+    public List<FlowNodeCurrentLog> getCurrentLogByFlowId(Long flowId) {
+        return nodeLogMapper.selectByFlowId(flowId);
+    }
+
+    /**
+     * 直接创建已办结节点记录
+     */
+    public FlowNodeCurrentLog createCurrentLog(Long flowId, Long prevId, ConfigNode node, NodeStatusEnum status) {
+        FlowNodeCurrentLog log = new FlowNodeCurrentLog();
+        log.setFlowId(flowId);
+        log.setPrevId(prevId);
+        log.setNodeId(node.getId());
+        log.setNodeTitle(node.getData().getTitle());
+        log.setNodeType(node.getType());
+        log.setStatus(status);
+        log.setCreateTime(new Date());
+        log.setFinishTime(new Date());
+        nodeLogMapper.insert(log);
+        return log;
+    }
+
+    /**
+     * 办结节点
+     *
+     * @throws FlowStatusNotSupportsException 节点已完成
+     */
+    public FlowNodeCurrentLog finishCurrent(FlowNodeCurrent current, NodeStatusEnum status) {
+        //删除待办记录
+        int isFinished = nodeCurrentMapper.deleteById(current.getCurrentId());
+        if (isFinished != 1) {
+            throw new FlowStatusNotSupportsException("flow node maybe finished!");
+        }
+        //创建历史记录
+        FlowNodeCurrentLog currentLog = BeanUtils.convertBean(current, FlowNodeCurrentLog.class);
+        currentLog.setStatus(status);
+        currentLog.setFinishTime(new Date());
+        nodeLogMapper.insert(currentLog);
+        //删除全部待办节点
+        taskMapper.deleteByCurrentId(current.getCurrentId());
+        flowEventService.nodeFinished(currentLog);
+        return currentLog;
+    }
+
+
+
+    /**
+     * 查询待办任务
+     *
+     * @param taskId ID
+     * @return 待办记录
+     */
+    public FlowTask getTaskById(Long taskId) {
+        return taskMapper.selectById(taskId);
+    }
+
+    /**
+     * 查询流程的全部待办任务
+     *
+     * @param flowId 业务流程ID
+     * @return 待办任务
+     */
+    public List<FlowTask> getTasksByFlowId(Long flowId) {
+        return taskMapper.selectByFlowId(flowId);
+    }
+
+    /**
+     * 查询未办结节点的待办
+     *
+     * @param currentId 未办结节点的ID
+     * @return 待办任务列表
+     */
+    public List<FlowTask> getTasksByCurrentId(Long currentId) {
+        return taskMapper.selectByCurrentId(currentId);
     }
 
     /**
@@ -260,48 +279,30 @@ public class FlowDataService {
         return task;
     }
 
+
     /**
-     * 办结节点
+     * 查询节点的已办记录
      *
-     * @throws FlowStatusNotSupportsException 节点已完成
+     * @param currentId 待办节点记录
+     * @return 已办任务
      */
-    public FlowNodeCurrentLog finishCurrent(FlowNodeCurrent current, NodeStatusEnum status) {
-        //删除待办记录
-        int isFinished = nodeCurrentMapper.deleteById(current.getCurrentId());
-        if (isFinished != 1) {
-            throw new FlowStatusNotSupportsException("flow node maybe finished!");
-        }
-        //创建历史记录
-        FlowNodeCurrentLog currentLog = BeanUtils.convertBean(current, FlowNodeCurrentLog.class);
-        currentLog.setStatus(status);
-        currentLog.setFinishTime(new Date());
-        nodeLogMapper.insert(currentLog);
-        //删除全部待办节点
-        taskMapper.deleteByCurrentId(current.getCurrentId());
-        flowEventService.nodeFinished(currentLog);
-        return currentLog;
+    public List<FlowTaskLog> getTaskLogsByCurrentId(Long currentId) {
+        return taskLogMapper.selectByCurrentId(currentId);
     }
 
     /**
-     * 直接创建已办结节点记录
+     * 查询流程的全部已办任务
+     *
+     * @param flowId 业务流程ID
+     * @return 已办结的流程节点记录
      */
-    public FlowNodeCurrentLog createCurrentLog(Long flowId, ConfigNode node, NodeStatusEnum status) {
-        FlowNodeCurrentLog log = new FlowNodeCurrentLog();
-        log.setFlowId(flowId);
-        log.setNodeId(node.getId());
-        log.setNodeTitle(node.getData().getTitle());
-        log.setNodeType(node.getType());
-        log.setStatus(status);
-        log.setCreateTime(new Date());
-        log.setFinishTime(new Date());
-        log.setCurrentId(snowflake.nextId());
-        nodeLogMapper.insert(log);
-        return log;
+    public List<FlowTaskLog> getTaskLogsByFlowId(Long flowId) {
+        return taskLogMapper.selectByFlowId(flowId);
     }
 
     public FlowTask createTask(Long flowId, Long currentId,
                                User user, List<User> candidates,
-                               TaskTypeEnum type, Long lastId) {
+                               TaskTypeEnum type, Long prevId) {
         FlowTask task = new FlowTask();
         task.setFlowId(flowId);
         task.setCurrentId(currentId);
@@ -314,9 +315,8 @@ public class FlowDataService {
         }
         task.setCandidates(candidates);
         task.setType(type);
-        task.setPrevId(lastId);
+        task.setPrevId(prevId);
         task.setReceiveTime(new Date());
-        task.setTaskId(snowflake.nextId());
         taskMapper.insert(task);
         flowEventService.taskCreated(Collections.singletonList(task));
         return task;
@@ -324,11 +324,10 @@ public class FlowDataService {
 
     public List<FlowTask> createTasks(Long flowId, Long currentId,
                                       List<User> userList, List<User> candidates,
-                                      TaskTypeEnum type, Long lastId) {
+                                      TaskTypeEnum type, Long prevId) {
         List<FlowTask> dataList = new ArrayList<>();
         for (User receiver : userList) {
             FlowTask task = new FlowTask();
-            task.setTaskId(snowflake.nextId());
             task.setFlowId(flowId);
             task.setCurrentId(currentId);
             task.setUserId(receiver.getUserId());
@@ -336,7 +335,7 @@ public class FlowDataService {
             task.setAction(TaskActionEnum.Pending);
             task.setCandidates(candidates);
             task.setType(type);
-            task.setPrevId(lastId);
+            task.setPrevId(prevId);
             task.setReceiveTime(new Date());
             dataList.add(task);
         }
@@ -355,6 +354,9 @@ public class FlowDataService {
                                   User operator, TaskActionEnum action,
                                   String remark) {
         //完成待办
+        if(task.getAction() == TaskActionEnum.UnClaim) {
+            throw new TaskNotClaimedException("flow task has not been claimed, please claim it first.");
+        }
         if (!task.getUserId().equals(operator.getUserId())) {
             throw new InvalidUserException("Expected user:(userId=" + task.getUserId() + ", userName=" + task.getUserName() + "), but provided user:(userId=" + operator.getUserId() + ", userName=" + operator.getUserName() + ")");
         }
@@ -365,6 +367,7 @@ public class FlowDataService {
         FlowTaskLog taskLog = BeanUtils.convertBean(task, FlowTaskLog.class);
         taskLog.setAction(action);
         taskLog.setRemark(remark);
+
         taskLog.setFinishTime(new Date());
         taskLogMapper.insert(taskLog);
         flowEventService.taskFinished(taskLog);
@@ -380,7 +383,6 @@ public class FlowDataService {
                                      User user, TaskActionEnum action,
                                      String remark, Map<String, Object> data, TaskTypeEnum type, Long lastId) {
         FlowTaskLog taskLog = new FlowTaskLog();
-        taskLog.setTaskId(snowflake.nextId());
         taskLog.setFlowId(flowId);
         taskLog.setCurrentId(currentId);
 

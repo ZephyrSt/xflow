@@ -29,11 +29,11 @@ public class EndNodeStrategy extends DefaultNodeStrategy implements NodeStrategy
     }
 
     @Override
-    public List<FlowNodeCurrentInfo> createNode(ConfigPublish publish, Flow flow, ConfigNode node,
+    public List<FlowNodeCurrentInfo> createNode(ConfigPublish publish, Flow flow, ConfigNode node, FlowNodeCurrentLog prevCurrent,
                                                 User operator, List<User> candidates, Map<String, Object> data) {
 
         //创建人节点直接办结, 创建办结记录
-        FlowNodeCurrentLog currentLog = flowDataService.createCurrentLog(flow.getFlowId(), node, NodeStatusEnum.finished);
+        FlowNodeCurrentLog currentLog = flowDataService.createCurrentLog(flow.getFlowId(), prevCurrent == null? null: prevCurrent.getCurrentId(), node, NodeStatusEnum.finished);
         FlowTaskLog taskLog = flowDataService.createTaskLog(flow.getFlowId(), currentLog.getCurrentId(), XFlowConfig.SYSTEM_USER, TaskActionEnum.Stop,
                 "办结节点", data, TaskTypeEnum.End, null);
         //流程办结

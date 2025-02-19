@@ -7,9 +7,9 @@ import top.zephyrs.xflow.entity.flow.FlowTask;
 import top.zephyrs.xflow.entity.flow.FlowTaskLog;
 import top.zephyrs.xflow.entity.flow.dto.FlowInfo;
 import top.zephyrs.xflow.entity.users.User;
-import top.zephyrs.xflow.service.ConfigService;
-import top.zephyrs.xflow.service.FlowActionService;
-import top.zephyrs.xflow.service.FlowDataService;
+import top.zephyrs.xflow.exceptions.InvalidUserException;
+import top.zephyrs.xflow.exceptions.TaskNotClaimedException;
+import top.zephyrs.xflow.service.*;
 
 import java.util.Collections;
 import java.util.List;
@@ -42,16 +42,27 @@ public class XFlowEngine {
 
     public Result<FlowInfo> approval(Long taskId, User operator, String remark, Map<String, Object> data, List<User> candidates) {
         ConfigPublish publish = configService.getPublishByTaskId(taskId);
-        FlowTaskLog taskLog = actionService.approval(publish, taskId, operator, candidates, remark, data);
-        FlowInfo flowInfo = flowDataService.getFlowCurrent(taskLog.getFlowId());
-        return Result.success(flowInfo);
+        try{
+            FlowTaskLog taskLog = actionService.approval(publish, taskId, operator, candidates, remark, data);
+            FlowInfo flowInfo = flowDataService.getFlowCurrent(taskLog.getFlowId());
+            return Result.success(flowInfo);
+        }catch (InvalidUserException e) {
+            return Result.paramError("无权限审核："+ operator.getUserName());
+        }catch (TaskNotClaimedException e) {
+            return Result.paramError("无权限审核：公共任务未领取");
+        }
+
     }
 
     public Result<FlowInfo> reject(Long taskId, User operator, String remark, Map<String, Object> data, List<User> candidates) {
         ConfigPublish publish = configService.getPublishByTaskId(taskId);
-        FlowTaskLog taskLog = actionService.reject(publish, taskId, operator, candidates, remark, data);
-        FlowInfo flowInfo = flowDataService.getFlowCurrent(taskLog.getFlowId());
-        return Result.success(flowInfo);
+        try{
+            FlowTaskLog taskLog = actionService.reject(publish, taskId, operator, candidates, remark, data);
+            FlowInfo flowInfo = flowDataService.getFlowCurrent(taskLog.getFlowId());
+            return Result.success(flowInfo);
+        }catch (InvalidUserException e) {
+            return Result.paramError("无权限审核："+ operator.getUserName());
+        }
     }
 
     /**

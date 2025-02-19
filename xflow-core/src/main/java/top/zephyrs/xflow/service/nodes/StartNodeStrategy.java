@@ -26,11 +26,11 @@ public class StartNodeStrategy extends DefaultNodeStrategy implements NodeStrate
     }
 
     @Override
-    public List<FlowNodeCurrentInfo> createNode(ConfigPublish publish, Flow flow, ConfigNode node,
+    public List<FlowNodeCurrentInfo> createNode(ConfigPublish publish, Flow flow, ConfigNode node, FlowNodeCurrentLog prevCurrent,
                                                 User operator, List<User> candidates, Map<String, Object> data) {
 
         //创建人节点直接办结, 创建办结记录
-        FlowNodeCurrentLog currentLog = flowDataService.createCurrentLog(flow.getFlowId(), node, NodeStatusEnum.finished);
+        FlowNodeCurrentLog currentLog = flowDataService.createCurrentLog(flow.getFlowId(), prevCurrent == null? null: prevCurrent.getCurrentId(), node, NodeStatusEnum.finished);
         FlowTaskLog taskLog = flowDataService.createTaskLog(flow.getFlowId(), currentLog.getCurrentId(), operator, TaskActionEnum.Submit,
                 "申请人提交", data, TaskTypeEnum.Submit, null);
 

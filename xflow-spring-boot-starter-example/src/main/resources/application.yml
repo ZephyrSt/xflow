@@ -6,9 +6,9 @@ server:
 spring:
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: xxxxxxxxx
-    username: xxxx
-    password: xxxx
+    url: jdbc:mysql://localhost:3306/xflow?useUnicode=true&characterEncoding=utf8&tinyInt1isBit=false&zeroDateTimeBehavior=convertToNull&transformedBitIsBoolean=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Shanghai
+    username: root
+    password: mysql_123
 
 #mybatis集成
 mybatis:

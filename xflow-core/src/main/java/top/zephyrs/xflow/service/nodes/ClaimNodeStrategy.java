@@ -4,6 +4,7 @@ import top.zephyrs.xflow.entity.config.ConfigNode;
 import top.zephyrs.xflow.entity.config.ConfigPublish;
 import top.zephyrs.xflow.entity.flow.Flow;
 import top.zephyrs.xflow.entity.flow.FlowNodeCurrent;
+import top.zephyrs.xflow.entity.flow.FlowNodeCurrentLog;
 import top.zephyrs.xflow.entity.flow.FlowTask;
 import top.zephyrs.xflow.entity.flow.dto.FlowNodeCurrentInfo;
 import top.zephyrs.xflow.entity.users.User;
@@ -23,7 +24,7 @@ public class ClaimNodeStrategy extends DefaultNodeStrategy implements NodeStrate
     }
 
     @Override
-    public List<FlowNodeCurrentInfo> createNode(ConfigPublish publish, Flow flow, ConfigNode node,
+    public List<FlowNodeCurrentInfo> createNode(ConfigPublish publish, Flow flow, ConfigNode node, FlowNodeCurrentLog prevCurrent,
                                                 User operator, List<User> candidates, Map<String, Object> data) {
         if(candidates == null || candidates.isEmpty()) {
             throw new FlowConfigurationIncorrectException("Not found next approval user !!!");
@@ -31,7 +32,7 @@ public class ClaimNodeStrategy extends DefaultNodeStrategy implements NodeStrate
         //任务是否需要进入候选人表，然后等待领取
         //创建待办节点
         Long flowId = flow.getFlowId();
-        FlowNodeCurrent current = flowDataService.createCurrent(flowId, node, true);
+        FlowNodeCurrent current = flowDataService.createCurrent(flowId, prevCurrent == null? null: prevCurrent.getCurrentId(), node, 0, true);
         Long currentId = current.getCurrentId();
         //创建一般任务, 任务所属用户为空
         FlowTask task = flowDataService.createTask(flowId, currentId, null, candidates, TaskTypeEnum.Approval, null);

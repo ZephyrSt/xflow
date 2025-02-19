@@ -69,8 +69,9 @@ public class DefaultFlowUserService implements FlowUserService {
             if(filter.getUsers().isEmpty()) {
                 return Collections.emptyList();
             }
-            List<String> userIdList = filter.getUsers().stream().map(User::getUserId).collect(Collectors.toList());
-            return userMapper.selectUserByIds(userIdList);
+//            List<String> userIdList = filter.getUsers().stream().map(User::getUserId).collect(Collectors.toList());
+//            return userMapper.selectUserByIds(userIdList);
+            return filter.getUsers();
         }
         //指定角色
         else if(filter.getType().equals(XFlowConfig.USER_FILTER_TYPE_ROLE)) {

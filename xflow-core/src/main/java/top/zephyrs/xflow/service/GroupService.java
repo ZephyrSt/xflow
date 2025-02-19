@@ -1,7 +1,7 @@
 package top.zephyrs.xflow.service;
 
+import top.zephyrs.xflow.configs.XFlowConfig;
 import top.zephyrs.xflow.data.GroupDAO;
-import top.zephyrs.xflow.data.keys.XFlowKeySnowflake;
 import top.zephyrs.xflow.entity.config.Group;
 import top.zephyrs.xflow.entity.config.GroupTree;
 import top.zephyrs.xflow.utils.BeanUtils;
@@ -12,11 +12,11 @@ import java.util.stream.Collectors;
 public class GroupService {
 
     private final GroupDAO groupMapper;
-    private final XFlowKeySnowflake snowflake;
+    private final XFlowConfig flowConfig;
 
-    public GroupService(GroupDAO groupMapper, XFlowKeySnowflake snowflake) {
+    public GroupService(GroupDAO groupMapper, XFlowConfig flowConfig) {
         this.groupMapper = groupMapper;
-        this.snowflake = snowflake;
+        this.flowConfig = flowConfig;
     }
 
     public List<Group> getByParent(Long parentId) {
@@ -43,15 +43,13 @@ public class GroupService {
     public boolean save(Group group) {
         Long id = group.getGroupId();
         if (id == null) {
-            group.setGroupId(snowflake.nextId());
-            return groupMapper.insert(group)>0;
+            return groupMapper.insert(group) > 0;
         }
         Group exists = groupMapper.selectById(id);
         if (exists == null) {
-            group.setGroupId(snowflake.nextId());
-            return groupMapper.insert(group)>0;
+            return groupMapper.insert(group) > 0;
         } else {
-            return groupMapper.updateById(group)>0;
+            return groupMapper.updateById(group) > 0;
         }
     }
 

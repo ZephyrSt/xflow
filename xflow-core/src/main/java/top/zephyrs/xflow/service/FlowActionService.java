@@ -1,7 +1,7 @@
 package top.zephyrs.xflow.service;
 
 import org.springframework.transaction.annotation.Transactional;
-import top.zephyrs.xflow.entity.config.Config;
+import top.zephyrs.xflow.configs.XFlowConfig;
 import top.zephyrs.xflow.entity.config.ConfigNode;
 import top.zephyrs.xflow.entity.config.ConfigPublish;
 import top.zephyrs.xflow.entity.flow.Flow;
@@ -32,19 +32,18 @@ public class FlowActionService {
     public FlowActionService(ConfigService configService,
                              FlowDataService flowDataService,
                              FlowUserService flowUserService,
-                             FlowLock flowLock) {
+                             FlowLock flowLock, XFlowConfig flowConfig) {
         this.configService = configService;
         this.flowDataService = flowDataService;
         this.flowLock = flowLock;
-        this.nodeStrategyWrapper = new NodeStrategyWrapper(configService, flowDataService, flowUserService);
+        this.nodeStrategyWrapper = new NodeStrategyWrapper(configService, flowDataService, flowUserService, flowConfig);
     }
 
     @Transactional(rollbackFor = RuntimeException.class)
     public Flow start(ConfigPublish publish, String bizId,
                       User submitter, List<User> candidates, Map<String, Object> data) {
         //获取开始节点配置, 开始节点必须是提交人节点
-        Config config = publish.getConfig();
-        ConfigNode start = config.getNodes().stream()
+        ConfigNode start = publish.getConfig().getNodes().stream()
                 .filter(flowNode -> flowNode.getType() == NodeTypeEnum.start)
                 .findFirst()
                 .orElse(null);
@@ -57,7 +56,7 @@ public class FlowActionService {
         //创建流程记录
         Flow flow = flowDataService.createFlow(publish, bizId);
         //创建待办节点
-        nodeStrategyWrapper.createNode(publish, flow, start, submitter, candidates, data);
+        nodeStrategyWrapper.createNode(publish, flow, start, null, submitter, candidates, data);
         return flow;
     }
 
@@ -88,7 +87,7 @@ public class FlowActionService {
                        User operator, List<User> candidates,
                        String remark, Map<String, Object> data) {
         FlowTask task = flowDataService.getTaskById(taskId);
-        if(task == null) {
+        if(task == null || task.getTaskId() == null) {
             throw new InvalidFlowException("flow task not found (taskId="+taskId+"), it may have been completed.");
         }
         try{

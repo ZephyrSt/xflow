@@ -10,11 +10,21 @@
     <dependencies>
         <dependency>
             <groupId>top.zephyrs</groupId>
-            <artifactId>xflow-data-mybatis</artifactId>
+            <artifactId>xflow-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>top.zephyrs</groupId>
+            <artifactId>xflow-data-semi</artifactId>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.mybatis</groupId>
             <artifactId>mybatis-spring</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
