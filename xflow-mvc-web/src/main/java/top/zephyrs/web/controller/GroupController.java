@@ -1,9 +1,9 @@
-package top.zephyrs.xflow.web.controller;
+package top.zephyrs.web.controller;
 
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 import org.springframework.web.bind.annotation.*;
-import top.zephyrs.xflow.entity.ParamsQuery;
+import top.zephyrs.web.entity.ParamsQuery;
 import top.zephyrs.xflow.entity.Result;
 import top.zephyrs.xflow.entity.config.Group;
 import top.zephyrs.xflow.entity.config.GroupTree;

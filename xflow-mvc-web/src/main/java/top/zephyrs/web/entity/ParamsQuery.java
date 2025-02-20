@@ -1,4 +1,4 @@
-package top.zephyrs.xflow.web.entity;
+package top.zephyrs.web.entity;
 
 import com.github.pagehelper.PageParam;
 import top.zephyrs.xflow.utils.JSONUtils;

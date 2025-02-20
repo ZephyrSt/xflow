@@ -1,18 +1,16 @@
-package top.zephyrs.xflow.web.controller;
+package top.zephyrs.web.controller;
 
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 import org.springframework.web.bind.annotation.*;
-import top.zephyrs.xflow.entity.ParamsQuery;
+import top.zephyrs.web.entity.ParamsQuery;
 import top.zephyrs.xflow.entity.Result;
-import top.zephyrs.xflow.entity.users.Dept;
 import top.zephyrs.xflow.entity.users.DeptTree;
 import top.zephyrs.xflow.entity.users.Role;
 import top.zephyrs.xflow.entity.users.User;
 import top.zephyrs.xflow.service.FlowUserService;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * 提供默认配置页面的用户信息查询接口
