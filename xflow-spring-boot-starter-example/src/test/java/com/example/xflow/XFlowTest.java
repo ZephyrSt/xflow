@@ -99,8 +99,5 @@ public class XFlowTest {
         result = xFlowEngine.approval(task.getTaskId(), user, "我要同意",data, null);
         log.info("claimNode approval: {}",result);
         assert result.isSuccess();
-
-
     }
-
 }

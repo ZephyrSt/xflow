@@ -4,7 +4,10 @@ import top.zephyrs.xflow.entity.config.Config;
 import top.zephyrs.xflow.entity.config.ConfigEdge;
 import top.zephyrs.xflow.entity.config.ConfigNode;
 import top.zephyrs.xflow.entity.config.ConfigPublish;
-import top.zephyrs.xflow.entity.flow.*;
+import top.zephyrs.xflow.entity.flow.Flow;
+import top.zephyrs.xflow.entity.flow.FlowNodeCurrent;
+import top.zephyrs.xflow.entity.flow.FlowNodeCurrentLog;
+import top.zephyrs.xflow.entity.flow.FlowTask;
 import top.zephyrs.xflow.entity.flow.dto.FlowNodeCurrentInfo;
 import top.zephyrs.xflow.entity.users.User;
 import top.zephyrs.xflow.enums.*;
@@ -88,7 +91,7 @@ public class DefaultNodeStrategy implements NodeStrategy {
      * 节点驳回后处理
      */
     protected FlowNodeCurrentLog doFinishCurrentOnReject(ConfigPublish publish, Flow flow, FlowNodeCurrent current,
-                                           User operator, List<User> candidates, Map<String, Object> data) {
+                                                         User operator, List<User> candidates, Map<String, Object> data) {
         //获取驳回策略
         ConfigNode configNode = publish.getConfig().getNodes().stream().filter(node -> node.getId().equals(current.getNodeId())).findFirst().orElse(null);
         if (configNode == null || configNode.getData() == null) {

@@ -1,6 +1,7 @@
 package top.zephyrs.web.entity;
 
 import com.github.pagehelper.PageParam;
+import top.zephyrs.xflow.entity.query.Query;
 import top.zephyrs.xflow.utils.JSONUtils;
 
 import java.util.Collection;
@@ -9,7 +10,7 @@ import java.util.Map;
 import java.util.Set;
 
 
-public class ParamsQuery implements top.zephyrs.xflow.entity.Query, Map<String, Object> {
+public class ParamsQuery implements Query, Map<String, Object> {
 
     private PageParam page;
     public static final Integer DEFAULT_PAGE_SIZE = 20;

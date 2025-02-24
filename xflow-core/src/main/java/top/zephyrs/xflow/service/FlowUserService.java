@@ -1,6 +1,6 @@
 package top.zephyrs.xflow.service;
 
-import top.zephyrs.xflow.entity.Query;
+import top.zephyrs.xflow.entity.query.Query;
 import top.zephyrs.xflow.entity.users.DeptTree;
 import top.zephyrs.xflow.entity.users.Role;
 import top.zephyrs.xflow.entity.users.User;

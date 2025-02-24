@@ -1,7 +1,7 @@
 package top.zephyrs.xflow.data;
 
 import org.apache.ibatis.annotations.Param;
-import top.zephyrs.xflow.entity.Query;
+import top.zephyrs.xflow.entity.query.Query;
 import top.zephyrs.xflow.entity.users.Dept;
 import top.zephyrs.xflow.entity.users.Role;
 import top.zephyrs.xflow.entity.users.User;

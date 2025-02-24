@@ -1,9 +1,13 @@
 package top.zephyrs.xflow.service.nodes;
 
+import top.zephyrs.xflow.entity.flow.Flow;
+import top.zephyrs.xflow.entity.flow.FlowNodeCurrent;
+import top.zephyrs.xflow.entity.flow.FlowTask;
+import top.zephyrs.xflow.entity.flow.FlowTaskLog;
+import top.zephyrs.xflow.entity.flow.FlowNodeCurrentLog;
 import top.zephyrs.xflow.entity.config.ConfigNode;
 import top.zephyrs.xflow.entity.config.ConfigNodeData;
 import top.zephyrs.xflow.entity.config.ConfigPublish;
-import top.zephyrs.xflow.entity.flow.*;
 import top.zephyrs.xflow.entity.flow.dto.FlowNodeCurrentInfo;
 import top.zephyrs.xflow.entity.users.User;
 import top.zephyrs.xflow.enums.TaskActionEnum;
@@ -83,8 +87,8 @@ public class VoteNodeStrategy extends DefaultNodeStrategy implements NodeStrateg
         }
         //统计全部的票数
         BigDecimal total = new BigDecimal(current.getTicketTotal());
-        Integer agree = 0;
-        Integer disagree = 0;
+        int agree = 0;
+        int disagree = 0;
         List<FlowTaskLog> logList = flowDataService.getTaskLogsByCurrentId(current.getCurrentId());
         for(FlowTaskLog log: logList) {
             if(log.getType() != TaskTypeEnum.Entrust) {

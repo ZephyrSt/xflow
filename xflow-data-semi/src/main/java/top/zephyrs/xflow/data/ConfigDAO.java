@@ -1,6 +1,6 @@
 package top.zephyrs.xflow.data;
 
-import top.zephyrs.xflow.entity.Query;
+import top.zephyrs.xflow.entity.query.Query;
 import top.zephyrs.xflow.entity.config.Config;
 import top.zephyrs.xflow.entity.config.ConfigVO;
 

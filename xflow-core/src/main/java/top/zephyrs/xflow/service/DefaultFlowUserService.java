@@ -1,9 +1,12 @@
 package top.zephyrs.xflow.service;
 
-import top.zephyrs.xflow.configs.XFlowConfig;
 import top.zephyrs.xflow.data.UserDAO;
-import top.zephyrs.xflow.entity.Query;
-import top.zephyrs.xflow.entity.users.*;
+import top.zephyrs.xflow.entity.users.Dept;
+import top.zephyrs.xflow.entity.users.DeptTree;
+import top.zephyrs.xflow.entity.users.Role;
+import top.zephyrs.xflow.configs.XFlowConfig;
+import top.zephyrs.xflow.entity.query.Query;
+import top.zephyrs.xflow.entity.users.User;
 import top.zephyrs.xflow.utils.BeanUtils;
 import top.zephyrs.xflow.utils.JSONUtils;
 
@@ -24,10 +27,10 @@ public class DefaultFlowUserService implements FlowUserService {
     }
 
     @Override
-    public List<User> getUsers(String filter, User operator, List<User> candidates) {
-        UserFilter userFilter = null;
+    public List<User> getUsers(String filter, top.zephyrs.xflow.entity.users.User operator, List<User> candidates) {
+        top.zephyrs.xflow.entity.users.UserFilter userFilter = null;
         if(filter != null) {
-            userFilter = JSONUtils.fromJson(filter, UserFilter.class);
+            userFilter = JSONUtils.fromJson(filter, top.zephyrs.xflow.entity.users.UserFilter.class);
         }
         return this.defaultUserFilterProcess(userFilter, operator, candidates);
     }
@@ -46,7 +49,7 @@ public class DefaultFlowUserService implements FlowUserService {
     public List<DeptTree> getDeptTree(String parentId) {
         List<Dept> all = userMapper.selectDeptByParentId(parentId);
         List<DeptTree> treeList = all.parallelStream()
-                .map(dict -> BeanUtils.convertBean(dict, DeptTree.class))
+                .map(dict -> BeanUtils.convertBean(dict, top.zephyrs.xflow.entity.users.DeptTree.class))
                 .collect(Collectors.toList());
         return streamToTree(treeList, parentId);
     }
@@ -60,7 +63,7 @@ public class DefaultFlowUserService implements FlowUserService {
                 .collect(Collectors.toList());
     }
 
-    protected List<User> defaultUserFilterProcess(UserFilter filter, User operator, List<User> candidates) {
+    protected List<User> defaultUserFilterProcess(top.zephyrs.xflow.entity.users.UserFilter filter, top.zephyrs.xflow.entity.users.User operator, List<User> candidates) {
         if(filter == null) {
             return Collections.emptyList();
         }
@@ -80,21 +83,21 @@ public class DefaultFlowUserService implements FlowUserService {
             }
             //筛选条件：全部人员
             if(filter.getFilter().equals(XFlowConfig.USER_FILTER_FILTER_ALL)) {
-                List<String> roleIdList = filter.getRoles().stream().map(Role::getRoleId).collect(Collectors.toList());;
+                List<String> roleIdList = filter.getRoles().stream().map(top.zephyrs.xflow.entity.users.Role::getRoleId).collect(Collectors.toList());;
                 return userMapper.selectUserByRoles(roleIdList);
             }
             //筛选条件：本部门
             if(filter.getFilter().equals(XFlowConfig.USER_FILTER_FILTER_DEPT)) {
-                List<String> roleIdList = filter.getRoles().stream().map(Role::getRoleId).collect(Collectors.toList());
+                List<String> roleIdList = filter.getRoles().stream().map(top.zephyrs.xflow.entity.users.Role::getRoleId).collect(Collectors.toList());
                 List<String> deptIdList = userMapper.selectDeptByUserId(operator.getUserId())
-                        .stream().map(Dept::getDeptId).collect(Collectors.toList());
+                        .stream().map(top.zephyrs.xflow.entity.users.Dept::getDeptId).collect(Collectors.toList());
                 return userMapper.selectUserByRolesAndDepts(roleIdList, deptIdList);
             }
             //筛选条件：上级部门
             if(filter.getFilter().equals(XFlowConfig.USER_FILTER_FILTER_MANAGE_DEPT)) {
                 List<String> roleIdList = filter.getRoles().stream().map(Role::getRoleId).collect(Collectors.toList());
                 List<String> deptIdList = userMapper.selectDeptByUserId(operator.getUserId())
-                        .stream().map(Dept::getParentId).collect(Collectors.toList());
+                        .stream().map(top.zephyrs.xflow.entity.users.Dept::getParentId).collect(Collectors.toList());
                 return userMapper.selectUserByRolesAndDepts(roleIdList, deptIdList);
             }
         }

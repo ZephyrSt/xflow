@@ -5,7 +5,8 @@ import org.junit.runner.RunWith;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.context.web.WebAppConfiguration;
-import top.zephyrs.xflow.entity.config.*;
+import top.zephyrs.xflow.entity.config.Config;
+import top.zephyrs.xflow.entity.config.ConfigPublish;
 import top.zephyrs.xflow.manage.XFlowEngine;
 import top.zephyrs.xflow.service.ConfigService;
 

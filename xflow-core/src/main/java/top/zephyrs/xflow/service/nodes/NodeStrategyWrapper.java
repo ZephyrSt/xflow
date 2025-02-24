@@ -1,10 +1,14 @@
 package top.zephyrs.xflow.service.nodes;
 
-import top.zephyrs.xflow.configs.XFlowConfig;
-import top.zephyrs.xflow.entity.config.ConfigNode;
 import top.zephyrs.xflow.entity.config.ConfigPublish;
-import top.zephyrs.xflow.entity.flow.*;
-import top.zephyrs.xflow.entity.flow.dto.FlowNodeCurrentInfo;
+import top.zephyrs.xflow.entity.flow.Flow;
+import top.zephyrs.xflow.entity.flow.FlowNodeCurrent;
+import top.zephyrs.xflow.entity.flow.FlowTask;
+import top.zephyrs.xflow.entity.flow.FlowTaskLog;
+import top.zephyrs.xflow.entity.flow.FlowNodeCurrentLog;
+import top.zephyrs.xflow.configs.XFlowConfig;
+import top.zephyrs.xflow.entity.config.*;
+import top.zephyrs.xflow.entity.flow.dto.*;
 import top.zephyrs.xflow.entity.users.User;
 import top.zephyrs.xflow.enums.NodeTypeEnum;
 import top.zephyrs.xflow.enums.RejectStrategyEnum;
@@ -93,7 +97,7 @@ public class NodeStrategyWrapper implements NodeStrategy {
 
     @Override
     public void onApproval(ConfigPublish publish, Flow flow, FlowNodeCurrent current,
-                                                User operator, List<User> candidates, Map<String, Object> data) {
+                           User operator, List<User> candidates, Map<String, Object> data) {
         NodeStrategy target = nodeMap.get(current.getNodeType());
         if(target == null) {
             throw new FlowConfigurationIncorrectException("node type: "+current.getNodeType()+" is invalid!");

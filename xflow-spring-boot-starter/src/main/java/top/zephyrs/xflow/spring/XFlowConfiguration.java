@@ -7,6 +7,8 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
+import top.zephyrs.xflow.data.GroupDAO;
+import top.zephyrs.xflow.data.TaskDAO;
 import top.zephyrs.xflow.configs.XFlowConfig;
 import top.zephyrs.xflow.data.*;
 import top.zephyrs.xflow.manage.XFlowEngine;
