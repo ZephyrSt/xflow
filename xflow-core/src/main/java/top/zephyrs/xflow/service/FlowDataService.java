@@ -18,6 +18,7 @@ import top.zephyrs.xflow.exceptions.FlowStatusNotSupportsException;
 import top.zephyrs.xflow.exceptions.InvalidFlowException;
 import top.zephyrs.xflow.exceptions.InvalidUserException;
 import top.zephyrs.xflow.exceptions.TaskNotClaimedException;
+import top.zephyrs.xflow.listener.FlowEventListener;
 import top.zephyrs.xflow.utils.BeanUtils;
 
 import java.util.*;
@@ -30,7 +31,7 @@ public class FlowDataService {
     private final TaskDAO taskMapper;
     private final TaskLogDAO taskLogMapper;
 
-    private final FlowEventService flowEventService;
+    private final FlowEventListener flowEventListener;
 
 
     public FlowDataService(FlowDAO flowMapper,
@@ -38,13 +39,13 @@ public class FlowDataService {
                            NodeCurrentLogDAO nodeLogMapper,
                            TaskDAO taskMapper,
                            TaskLogDAO taskLogMapper,
-                           FlowEventService flowEventService) {
+                           FlowEventListener flowEventListener) {
         this.flowMapper = flowMapper;
         this.nodeCurrentMapper = nodeCurrentMapper;
         this.nodeLogMapper = nodeLogMapper;
         this.taskMapper = taskMapper;
         this.taskLogMapper = taskLogMapper;
-        this.flowEventService = flowEventService;
+        this.flowEventListener = flowEventListener;
     }
 
     /**
@@ -115,14 +116,14 @@ public class FlowDataService {
             flow.setConfigId(publish.getConfigId());
             flow.setPublishId(publish.getPublishId());
             flowMapper.insert(flow);
-            flowEventService.flowCreated(flow);
+            flowEventListener.flowCreated(flow);
             return flow;
         } else {
             flow.setStatus(FlowStatusEnum.flowing);
             flow.setConfigId(publish.getConfigId());
             flow.setPublishId(publish.getPublishId());
             flowMapper.updateById(flow);
-            flowEventService.flowCreated(flow);
+            flowEventListener.flowCreated(flow);
             return flow;
         }
     }
@@ -140,8 +141,7 @@ public class FlowDataService {
             flow.setFinishTime(new Date());
             flowMapper.updateById(flow);
         }
-
-        flowEventService.flowFinished(flow);
+        flowEventListener.flowFinished(flow);
         return flow;
     }
 
@@ -174,7 +174,7 @@ public class FlowDataService {
         current.setStatus(needClaimed ? NodeStatusEnum.unclaimed : NodeStatusEnum.flowing);
         current.setTicketTotal(voteTotal);
         nodeCurrentMapper.insert(current);
-        flowEventService.nodeCreated(current);
+        flowEventListener.nodeCreated(current);
         return current;
     }
 
@@ -224,7 +224,7 @@ public class FlowDataService {
         nodeLogMapper.insert(currentLog);
         //删除全部待办节点
         taskMapper.deleteByCurrentId(current.getCurrentId());
-        flowEventService.nodeFinished(currentLog);
+        flowEventListener.nodeFinished(currentLog);
         return currentLog;
     }
 
@@ -279,7 +279,7 @@ public class FlowDataService {
         task.setUserName(user.getUserName());
         task.setAction(TaskActionEnum.Pending);
         taskMapper.updateById(task);
-        flowEventService.taskClaimed(task);
+        flowEventListener.taskClaimed(task);
         return task;
     }
 
@@ -322,7 +322,7 @@ public class FlowDataService {
         task.setPrevId(prevId);
         task.setReceiveTime(new Date());
         taskMapper.insert(task);
-        flowEventService.taskCreated(Collections.singletonList(task));
+        flowEventListener.taskCreated(Collections.singletonList(task));
         return task;
     }
 
@@ -344,7 +344,7 @@ public class FlowDataService {
             dataList.add(task);
         }
         taskMapper.insertBatch(dataList);
-        flowEventService.taskCreated(dataList);
+        flowEventListener.taskCreated(dataList);
         return dataList;
     }
 
@@ -374,7 +374,7 @@ public class FlowDataService {
 
         taskLog.setFinishTime(new Date());
         taskLogMapper.insert(taskLog);
-        flowEventService.taskFinished(taskLog);
+        flowEventListener.taskFinished(taskLog);
         return taskLog;
     }
 

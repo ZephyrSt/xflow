@@ -1,7 +1,6 @@
 package top.zephyrs.xflow.service;
 
 import org.springframework.transaction.annotation.Transactional;
-import top.zephyrs.xflow.configs.XFlowConfig;
 import top.zephyrs.xflow.entity.config.ConfigNode;
 import top.zephyrs.xflow.entity.config.ConfigPublish;
 import top.zephyrs.xflow.entity.flow.Flow;
@@ -29,14 +28,15 @@ public class FlowActionService {
     private final FlowLock flowLock;
     private final NodeStrategyWrapper nodeStrategyWrapper;
 
-    public FlowActionService(ConfigService configService,
+    public FlowActionService(
+                            NodeStrategyWrapper wrapper,
+                             ConfigService configService,
                              FlowDataService flowDataService,
-                             FlowUserService flowUserService,
-                             FlowLock flowLock, XFlowConfig flowConfig) {
+                             FlowLock flowLock) {
         this.configService = configService;
         this.flowDataService = flowDataService;
         this.flowLock = flowLock;
-        this.nodeStrategyWrapper = new NodeStrategyWrapper(configService, flowDataService, flowUserService, flowConfig);
+        this.nodeStrategyWrapper = wrapper;
     }
 
     @Transactional(rollbackFor = RuntimeException.class)
@@ -60,48 +60,37 @@ public class FlowActionService {
         return flow;
     }
 
+    /**
+     * 审核
+     * @param publish
+     * @param taskId
+     * @param operator
+     * @param candidates 候选人
+     * @param remark
+     * @param data
+     * @return flowId
+     */
     @Transactional(rollbackFor = RuntimeException.class)
-    public FlowTaskLog approval(ConfigPublish publish, Long taskId,
+    public Long approval(ConfigPublish publish, Long taskId,
                          User operator, List<User> candidates,
                          String remark, Map<String, Object> data) {
         FlowTask task = flowDataService.getTaskById(taskId);
         if(task == null) {
             throw new InvalidFlowException("flow task not found (taskId="+taskId+"), it may have been completed.");
         }
-        try{
-            flowLock.tryLock(task.getCurrentId());
-            //完成待办
-            FlowTaskLog taskLog = flowDataService.finishTask(task, operator, TaskActionEnum.Approved, remark);
-            //后续处理
-            Long flowId = taskLog.getFlowId();
-            Long currentId = taskLog.getCurrentId();
-            nodeStrategyWrapper.doApproval(publish, flowId, currentId, operator, candidates, data, taskLog);
-            return taskLog;
-        }finally {
-            flowLock.unLock(task.getCurrentId());
-        }
+        //完成待办，并进行后续处理
+        return nodeStrategyWrapper.doApproval(publish, task, operator, candidates, data, remark);
     }
 
     @Transactional(rollbackFor = RuntimeException.class)
-    public FlowTaskLog reject(ConfigPublish publish, Long taskId,
+    public Long reject(ConfigPublish publish, Long taskId,
                        User operator, List<User> candidates,
                        String remark, Map<String, Object> data) {
         FlowTask task = flowDataService.getTaskById(taskId);
         if(task == null || task.getTaskId() == null) {
             throw new InvalidFlowException("flow task not found (taskId="+taskId+"), it may have been completed.");
         }
-        try{
-            flowLock.tryLock(task.getCurrentId());
-            //完成待办
-            FlowTaskLog taskLog = flowDataService.finishTask(task, operator, TaskActionEnum.Reject, remark);
-            //后续处理
-            Long flowId = taskLog.getFlowId();
-            Long currentId = taskLog.getCurrentId();
-            nodeStrategyWrapper.doReject(publish, flowId, currentId, operator, candidates, data, taskLog);
-            return taskLog;
-        }finally {
-            flowLock.unLock(task.getCurrentId());
-        }
+        return nodeStrategyWrapper.doReject(publish, task, operator, candidates, data, remark);
     }
 
     /**

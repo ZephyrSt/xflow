@@ -8,22 +8,9 @@ public interface ConfigPublishDAO {
 
     int insert(ConfigPublish configPublish);
 
-    /**
-     * 查询当前已发布的全部流程
-     * @return 全部已发布流程
-     */
-    List<ConfigPublish> getActivePublish();
-
     int disActiveByConfigId(Long configId);
 
     Integer selectMaxVersionByConfigId(Long configId);
-
-    /**
-     * 查询当前已发布的流程
-     * @param configId 流程定义ID
-     * @return 已发布流程
-     */
-    ConfigPublish getActivePublishByConfigId(Long configId);
 
     /**
      * 查询当前已发布的流程
@@ -31,6 +18,8 @@ public interface ConfigPublishDAO {
      * @return 已发布流程
      */
     ConfigPublish getActivePublishByConfigCode(String configCode);
+
+    List<ConfigPublish> getByConfigId(Long configId);
 
     /**
      * 查询流程使用的配置信息

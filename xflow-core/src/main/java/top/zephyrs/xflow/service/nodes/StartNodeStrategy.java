@@ -3,6 +3,7 @@ package top.zephyrs.xflow.service.nodes;
 import top.zephyrs.xflow.entity.config.ConfigNode;
 import top.zephyrs.xflow.entity.config.ConfigPublish;
 import top.zephyrs.xflow.entity.flow.Flow;
+import top.zephyrs.xflow.entity.flow.FlowNodeCurrent;
 import top.zephyrs.xflow.entity.flow.FlowNodeCurrentLog;
 import top.zephyrs.xflow.entity.flow.FlowTaskLog;
 import top.zephyrs.xflow.entity.flow.dto.FlowNodeCurrentInfo;
@@ -33,9 +34,9 @@ public class StartNodeStrategy extends DefaultNodeStrategy implements NodeStrate
         FlowNodeCurrentLog currentLog = flowDataService.createCurrentLog(flow.getFlowId(), prevCurrent == null? null: prevCurrent.getCurrentId(), node, NodeStatusEnum.finished);
         FlowTaskLog taskLog = flowDataService.createTaskLog(flow.getFlowId(), currentLog.getCurrentId(), operator, TaskActionEnum.Submit,
                 "申请人提交", data, TaskTypeEnum.Submit, null);
-
         //创建后续节点
         return super.doCreateNextNodes(publish, flow, currentLog, operator, candidates, data);
+
     }
 
 }

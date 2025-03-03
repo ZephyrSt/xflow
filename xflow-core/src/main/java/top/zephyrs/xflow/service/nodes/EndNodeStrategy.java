@@ -1,6 +1,6 @@
 package top.zephyrs.xflow.service.nodes;
 
-import top.zephyrs.xflow.configs.XFlowConfig;
+import top.zephyrs.xflow.configs.XFlowConstants;
 import top.zephyrs.xflow.entity.config.ConfigNode;
 import top.zephyrs.xflow.entity.config.ConfigPublish;
 import top.zephyrs.xflow.entity.flow.Flow;
@@ -34,7 +34,7 @@ public class EndNodeStrategy extends DefaultNodeStrategy implements NodeStrategy
 
         //创建人节点直接办结, 创建办结记录
         FlowNodeCurrentLog currentLog = flowDataService.createCurrentLog(flow.getFlowId(), prevCurrent == null? null: prevCurrent.getCurrentId(), node, NodeStatusEnum.finished);
-        FlowTaskLog taskLog = flowDataService.createTaskLog(flow.getFlowId(), currentLog.getCurrentId(), XFlowConfig.SYSTEM_USER, TaskActionEnum.Stop,
+        FlowTaskLog taskLog = flowDataService.createTaskLog(flow.getFlowId(), currentLog.getCurrentId(), XFlowConstants.SYSTEM_USER, TaskActionEnum.Stop,
                 "办结节点", data, TaskTypeEnum.End, null);
         //流程办结
         flowDataService.finishFlow(flow.getFlowId(), FlowStatusEnum.finished);

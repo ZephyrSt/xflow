@@ -1,6 +1,6 @@
 package top.zephyrs.xflow.service.nodes;
 
-import top.zephyrs.xflow.configs.XFlowConfig;
+import top.zephyrs.xflow.configs.XFlowConstants;
 import top.zephyrs.xflow.entity.config.ConfigNode;
 import top.zephyrs.xflow.entity.config.ConfigPublish;
 import top.zephyrs.xflow.entity.flow.Flow;
@@ -33,7 +33,7 @@ public class ConditionNodeStrategy extends DefaultNodeStrategy implements NodeSt
         String condition = node.getData().getConditional();
         //条件节点直接办结, 创建办结记录（获取后续节点时已经过滤掉不符合条件的节点）
         FlowNodeCurrentLog currentLog = flowDataService.createCurrentLog(flow.getFlowId(), prevCurrent == null? null: prevCurrent.getCurrentId(), node, NodeStatusEnum.finished);
-        FlowTaskLog taskLog = flowDataService.createTaskLog(flow.getFlowId(), currentLog.getCurrentId(), XFlowConfig.SYSTEM_USER, TaskActionEnum.Approved,
+        FlowTaskLog taskLog = flowDataService.createTaskLog(flow.getFlowId(), currentLog.getCurrentId(), XFlowConstants.SYSTEM_USER, TaskActionEnum.Approved,
                 "条件判断："+condition, data, TaskTypeEnum.Condition, null);
         //创建后续节点
         return super.doCreateNextNodes(publish, flow, currentLog, operator, candidates, data);

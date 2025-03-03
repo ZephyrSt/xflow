@@ -25,6 +25,11 @@ import java.util.Map;
 
 public class VoteNodeStrategy extends DefaultNodeStrategy implements NodeStrategy {
 
+
+    protected VoteNodeStrategy(ConfigService configService, FlowDataService flowDataService, NodeStrategyWrapper wrapper) {
+        super(configService, flowDataService, wrapper);
+    }
+
     @Override
     public List<FlowNodeCurrentInfo> createNode(ConfigPublish publish, Flow flow, ConfigNode node, FlowNodeCurrentLog prevCurrent,
                                                 User operator, List<User> candidates, Map<String, Object> data) {
@@ -39,11 +44,6 @@ public class VoteNodeStrategy extends DefaultNodeStrategy implements NodeStrateg
         //创建一般任务
         List<FlowTask> taskList = flowDataService.createTasks(flowId, currentId, candidates, null, TaskTypeEnum.Approval, null);
         return Collections.singletonList(new FlowNodeCurrentInfo(current, taskList));
-    }
-
-
-    protected VoteNodeStrategy(ConfigService configService, FlowDataService flowDataService, NodeStrategyWrapper wrapper) {
-        super(configService, flowDataService, wrapper);
     }
 
     @Override

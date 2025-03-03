@@ -13,14 +13,6 @@ import java.util.List;
 public interface ConfigPublishMapper extends BaseMapper<ConfigPublish>, ConfigPublishDAO {
 
 
-    /**
-     * 查询当前已发布的全部流程
-     * @return 全部已发布流程
-     */
-    @Override
-    @Select("select * from x_flow_config_publish t where is_active = 1")
-    List<ConfigPublish> getActivePublish();
-
     @Override
     @Update("update x_flow_config_publish set is_active=false where config_id = #{configId}")
     int disActiveByConfigId(Long configId);
@@ -31,16 +23,6 @@ public interface ConfigPublishMapper extends BaseMapper<ConfigPublish>, ConfigPu
 
     /**
      * 查询当前已发布的流程
-     * @param configId 流程定义ID
-     * @return 已发布流程
-     */
-    @Override
-    @Select("select t.* from x_flow_config_publish t inner join x_flow_config f on t.config_id = f.config_id " +
-            "where t.is_active = 1 and f.config_id=#{configId}")
-    ConfigPublish getActivePublishByConfigId(Long configId);
-
-    /**
-     * 查询当前已发布的流程
      * @param configCode 流程定义编码
      * @return 已发布流程
      */
@@ -48,6 +30,10 @@ public interface ConfigPublishMapper extends BaseMapper<ConfigPublish>, ConfigPu
     @Select("select t.* from x_flow_config_publish t inner join x_flow_config f on t.config_id = f.config_id " +
             "where t.is_active = 1 and f.config_code=#{configCode}")
     ConfigPublish getActivePublishByConfigCode(String configCode);
+
+    @Override
+    @Select("select t.* from x_flow_config_publish t where config_id=#{configId}")
+    List<ConfigPublish> getByConfigId(Long configId);
 
     /**
      * 查询流程使用的配置信息

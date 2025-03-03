@@ -1,17 +1,18 @@
-package top.zephyrs.xflow.service;
+package top.zephyrs.xflow.listener;
 
 import top.zephyrs.xflow.entity.flow.Flow;
 import top.zephyrs.xflow.entity.flow.FlowNodeCurrent;
 import top.zephyrs.xflow.entity.flow.FlowTask;
 import top.zephyrs.xflow.entity.flow.FlowTaskLog;
 import top.zephyrs.xflow.entity.flow.FlowNodeCurrentLog;
+import top.zephyrs.xflow.listener.FlowEventListener;
 
 import java.util.List;
 
 /**
  * 默认的流程状态变更的空实现
  */
-public class DefaultFlowEventService implements FlowEventService {
+public class DefaultFlowEventListener implements FlowEventListener {
 
     @Override
     public void taskCreated(List<FlowTask> tasks) {

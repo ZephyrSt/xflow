@@ -2,6 +2,7 @@ package top.zephyrs.xflow.spring;
 
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import top.zephyrs.xflow.enums.ScheduleTypeEnum;
 import top.zephyrs.xflow.enums.RejectStrategyEnum;
 
 @ConfigurationProperties(prefix = "xflow")
@@ -18,5 +19,10 @@ public class XFlowProperties {
      */
     private RejectStrategyEnum defaultRejectStrategy = RejectStrategyEnum.start;
 
+    /**
+     * 任务处理方式, 异步方式暂未实现
+     */
+    @Deprecated
+    private ScheduleTypeEnum flowType = ScheduleTypeEnum.SYNC;
 
 }

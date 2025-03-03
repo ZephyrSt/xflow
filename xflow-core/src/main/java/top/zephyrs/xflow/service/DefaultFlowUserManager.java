@@ -1,11 +1,11 @@
 package top.zephyrs.xflow.service;
 
+import top.zephyrs.xflow.configs.XFlowConstants;
 import top.zephyrs.xflow.data.UserDAO;
+import top.zephyrs.xflow.entity.query.Query;
 import top.zephyrs.xflow.entity.users.Dept;
 import top.zephyrs.xflow.entity.users.DeptTree;
 import top.zephyrs.xflow.entity.users.Role;
-import top.zephyrs.xflow.configs.XFlowConfig;
-import top.zephyrs.xflow.entity.query.Query;
 import top.zephyrs.xflow.entity.users.User;
 import top.zephyrs.xflow.utils.BeanUtils;
 import top.zephyrs.xflow.utils.JSONUtils;
@@ -17,12 +17,12 @@ import java.util.stream.Collectors;
 /**
  * 根据用户筛选信息获取用户
  */
-public class DefaultFlowUserService implements FlowUserService {
+public class DefaultFlowUserManager implements FlowUserManager {
 
 
     private final UserDAO userMapper;
 
-    public DefaultFlowUserService(UserDAO userMapper) {
+    public DefaultFlowUserManager(UserDAO userMapper) {
         this.userMapper = userMapper;
     }
 
@@ -68,7 +68,7 @@ public class DefaultFlowUserService implements FlowUserService {
             return Collections.emptyList();
         }
         //指定人员
-        if(filter.getType().equals(XFlowConfig.USER_FILTER_TYPE_USER)) {
+        if(filter.getType().equals(XFlowConstants.USER_FILTER_TYPE_USER)) {
             if(filter.getUsers().isEmpty()) {
                 return Collections.emptyList();
             }
@@ -77,31 +77,31 @@ public class DefaultFlowUserService implements FlowUserService {
             return filter.getUsers();
         }
         //指定角色
-        else if(filter.getType().equals(XFlowConfig.USER_FILTER_TYPE_ROLE)) {
+        else if(filter.getType().equals(XFlowConstants.USER_FILTER_TYPE_ROLE)) {
             if(filter.getRoles().isEmpty()) {
                 return Collections.emptyList();
             }
             //筛选条件：全部人员
-            if(filter.getFilter().equals(XFlowConfig.USER_FILTER_FILTER_ALL)) {
+            if(filter.getFilter().equals(XFlowConstants.USER_FILTER_FILTER_ALL)) {
                 List<String> roleIdList = filter.getRoles().stream().map(top.zephyrs.xflow.entity.users.Role::getRoleId).collect(Collectors.toList());;
                 return userMapper.selectUserByRoles(roleIdList);
             }
             //筛选条件：本部门
-            if(filter.getFilter().equals(XFlowConfig.USER_FILTER_FILTER_DEPT)) {
+            if(filter.getFilter().equals(XFlowConstants.USER_FILTER_FILTER_DEPT)) {
                 List<String> roleIdList = filter.getRoles().stream().map(top.zephyrs.xflow.entity.users.Role::getRoleId).collect(Collectors.toList());
                 List<String> deptIdList = userMapper.selectDeptByUserId(operator.getUserId())
                         .stream().map(top.zephyrs.xflow.entity.users.Dept::getDeptId).collect(Collectors.toList());
                 return userMapper.selectUserByRolesAndDepts(roleIdList, deptIdList);
             }
             //筛选条件：上级部门
-            if(filter.getFilter().equals(XFlowConfig.USER_FILTER_FILTER_MANAGE_DEPT)) {
+            if(filter.getFilter().equals(XFlowConstants.USER_FILTER_FILTER_MANAGE_DEPT)) {
                 List<String> roleIdList = filter.getRoles().stream().map(Role::getRoleId).collect(Collectors.toList());
                 List<String> deptIdList = userMapper.selectDeptByUserId(operator.getUserId())
                         .stream().map(top.zephyrs.xflow.entity.users.Dept::getParentId).collect(Collectors.toList());
                 return userMapper.selectUserByRolesAndDepts(roleIdList, deptIdList);
             }
         }
-        else if(filter.getType().equals(XFlowConfig.USER_FILTER_TYPE_SELECT)) {
+        else if(filter.getType().equals(XFlowConstants.USER_FILTER_TYPE_SELECT)) {
             return candidates;
         }
         return Collections.emptyList();

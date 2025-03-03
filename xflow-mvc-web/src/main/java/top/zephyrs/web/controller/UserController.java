@@ -8,7 +8,7 @@ import top.zephyrs.xflow.entity.Result;
 import top.zephyrs.xflow.entity.users.DeptTree;
 import top.zephyrs.xflow.entity.users.Role;
 import top.zephyrs.xflow.entity.users.User;
-import top.zephyrs.xflow.service.FlowUserService;
+import top.zephyrs.xflow.service.FlowUserManager;
 
 import java.util.List;
 
@@ -19,9 +19,9 @@ import java.util.List;
 @RequestMapping("/users")
 public class UserController {
 
-    private final FlowUserService userService;
+    private final FlowUserManager userService;
 
-    public UserController(FlowUserService userService) {
+    public UserController(FlowUserManager userService) {
         this.userService = userService;
     }
 

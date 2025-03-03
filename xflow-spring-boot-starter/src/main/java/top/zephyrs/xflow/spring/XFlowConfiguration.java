@@ -7,12 +7,13 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
-import top.zephyrs.xflow.data.GroupDAO;
-import top.zephyrs.xflow.data.TaskDAO;
 import top.zephyrs.xflow.configs.XFlowConfig;
 import top.zephyrs.xflow.data.*;
+import top.zephyrs.xflow.listener.DefaultFlowEventListener;
+import top.zephyrs.xflow.listener.FlowEventListener;
 import top.zephyrs.xflow.manage.XFlowEngine;
 import top.zephyrs.xflow.service.*;
+import top.zephyrs.xflow.service.nodes.NodeStrategyWrapper;
 
 @Configuration
 @EnableConfigurationProperties(value = XFlowProperties.class)
@@ -23,7 +24,7 @@ public class XFlowConfiguration {
     @Bean
     @ConditionalOnMissingBean
     public XFlowConfig xflowConfig(XFlowProperties xFlowProperties) {
-        return new XFlowConfig(xFlowProperties.getWorkerId(), xFlowProperties.getDefaultRejectStrategy());
+        return new XFlowConfig(xFlowProperties.getWorkerId(), xFlowProperties.getFlowType(), xFlowProperties.getDefaultRejectStrategy());
     }
 
     @Bean
@@ -40,14 +41,14 @@ public class XFlowConfiguration {
 
     @Bean
     @ConditionalOnMissingBean
-    public FlowEventService flowEventService() {
-        return new DefaultFlowEventService();
+    public FlowEventListener flowEventService() {
+        return new DefaultFlowEventListener();
     }
 
     @Bean
     @ConditionalOnMissingBean
-    public FlowUserService flowUserService(@Autowired UserDAO userDAO){
-        return new DefaultFlowUserService(userDAO);
+    public FlowUserManager flowUserService(@Autowired UserDAO userDAO){
+        return new DefaultFlowUserManager(userDAO);
     }
 
     @Bean
@@ -57,8 +58,8 @@ public class XFlowConfiguration {
                                            NodeCurrentLogDAO nodeLogMapper,
                                            TaskDAO taskMapper,
                                            TaskLogDAO taskLogMapper,
-                                           FlowEventService flowEventService){
-        return new FlowDataService(flowMapper, nodeCurrentMapper, nodeLogMapper, taskMapper, taskLogMapper, flowEventService);
+                                           FlowEventListener flowEventListener){
+        return new FlowDataService(flowMapper, nodeCurrentMapper, nodeLogMapper, taskMapper, taskLogMapper, flowEventListener);
     }
 
     @Bean
@@ -69,12 +70,20 @@ public class XFlowConfiguration {
 
     @Bean
     @ConditionalOnMissingBean
-    public FlowActionService flowActionService(ConfigService configService,
+    public NodeStrategyWrapper nodeStrategyWrapper(ConfigService configService,
+                                                   FlowDataService flowDataService,
+                                                   FlowUserManager flowUserManager,
+                                                   XFlowConfig flowConfig,
+                                                   FlowLock flowLock) {
+        return new NodeStrategyWrapper(configService, flowDataService, flowUserManager, flowConfig, flowLock);
+    }
+
+    @Bean
+    @ConditionalOnMissingBean
+    public FlowActionService flowActionService(NodeStrategyWrapper wrapper, ConfigService configService,
                                         FlowDataService flowDataService,
-                                        FlowUserService flowUserService,
-                                               XFlowConfig flowConfig,
                                                FlowLock flowLock){
-        return new FlowActionService(configService, flowDataService, flowUserService, flowLock, flowConfig);
+        return new FlowActionService(wrapper, configService, flowDataService, flowLock);
     }
 
     @Bean

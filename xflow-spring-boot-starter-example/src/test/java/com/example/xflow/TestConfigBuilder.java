@@ -1,6 +1,7 @@
 package com.example.xflow;
 
 import top.zephyrs.xflow.configs.XFlowConfig;
+import top.zephyrs.xflow.configs.XFlowConstants;
 import top.zephyrs.xflow.entity.config.*;
 import top.zephyrs.xflow.entity.users.User;
 import top.zephyrs.xflow.entity.users.UserFilter;
@@ -55,7 +56,7 @@ public class TestConfigBuilder {
 
         //指定人员
         UserFilter uf = new UserFilter();
-        uf.setType(XFlowConfig.USER_FILTER_TYPE_USER);
+        uf.setType(XFlowConstants.USER_FILTER_TYPE_USER);
         uf.setUsers(startUser());
 
         nodeData.setFilter(JSONUtils.fromJson(JSONUtils.toJson(uf), HashMap.class));
@@ -86,7 +87,7 @@ public class TestConfigBuilder {
 
         //指定人员
         UserFilter uf = new UserFilter();
-        uf.setType(XFlowConfig.USER_FILTER_TYPE_USER);
+        uf.setType(XFlowConstants.USER_FILTER_TYPE_USER);
 
         uf.setUsers(approvalUser());
 
@@ -112,7 +113,7 @@ public class TestConfigBuilder {
 
         //指定人员
         UserFilter uf = new UserFilter();
-        uf.setType(XFlowConfig.USER_FILTER_TYPE_USER);
+        uf.setType(XFlowConstants.USER_FILTER_TYPE_USER);
         uf.setUsers(jointlyUser());
 
         nodeData.setFilter(JSONUtils.fromJson(JSONUtils.toJson(uf), HashMap.class));
@@ -160,7 +161,7 @@ public class TestConfigBuilder {
 
         //指定人员
         UserFilter uf = new UserFilter();
-        uf.setType(XFlowConfig.USER_FILTER_TYPE_USER);
+        uf.setType(XFlowConstants.USER_FILTER_TYPE_USER);
         uf.setUsers(claimUser());
         nodeData.setFilter(JSONUtils.fromJson(JSONUtils.toJson(uf), HashMap.class));
 
@@ -189,7 +190,7 @@ public class TestConfigBuilder {
         nodeData.setWeight(new BigDecimal("0.6"));
         //指定人员
         UserFilter uf = new UserFilter();
-        uf.setType(XFlowConfig.USER_FILTER_TYPE_USER);
+        uf.setType(XFlowConstants.USER_FILTER_TYPE_USER);
         uf.setUsers(voteUser());
         nodeData.setFilter(JSONUtils.fromJson(JSONUtils.toJson(uf), HashMap.class));
 

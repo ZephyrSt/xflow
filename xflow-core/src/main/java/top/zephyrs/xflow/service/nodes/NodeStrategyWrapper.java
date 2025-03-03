@@ -1,22 +1,20 @@
 package top.zephyrs.xflow.service.nodes;
 
-import top.zephyrs.xflow.entity.config.ConfigPublish;
-import top.zephyrs.xflow.entity.flow.Flow;
-import top.zephyrs.xflow.entity.flow.FlowNodeCurrent;
-import top.zephyrs.xflow.entity.flow.FlowTask;
-import top.zephyrs.xflow.entity.flow.FlowTaskLog;
-import top.zephyrs.xflow.entity.flow.FlowNodeCurrentLog;
 import top.zephyrs.xflow.configs.XFlowConfig;
-import top.zephyrs.xflow.entity.config.*;
-import top.zephyrs.xflow.entity.flow.dto.*;
+import top.zephyrs.xflow.entity.config.ConfigNode;
+import top.zephyrs.xflow.entity.config.ConfigPublish;
+import top.zephyrs.xflow.entity.flow.*;
+import top.zephyrs.xflow.entity.flow.dto.FlowNodeCurrentInfo;
 import top.zephyrs.xflow.entity.users.User;
 import top.zephyrs.xflow.enums.NodeTypeEnum;
 import top.zephyrs.xflow.enums.RejectStrategyEnum;
+import top.zephyrs.xflow.enums.TaskActionEnum;
 import top.zephyrs.xflow.enums.TaskTypeEnum;
 import top.zephyrs.xflow.exceptions.FlowConfigurationIncorrectException;
 import top.zephyrs.xflow.service.ConfigService;
 import top.zephyrs.xflow.service.FlowDataService;
-import top.zephyrs.xflow.service.FlowUserService;
+import top.zephyrs.xflow.service.FlowLock;
+import top.zephyrs.xflow.service.FlowUserManager;
 import top.zephyrs.xflow.utils.JSONUtils;
 
 import java.util.Collections;
@@ -28,17 +26,22 @@ public class NodeStrategyWrapper implements NodeStrategy {
 
     protected final ConfigService configService;
     protected final FlowDataService flowDataService;
-    protected final FlowUserService flowUserService;
+    protected final FlowUserManager flowUserManager;
 
-    private final XFlowConfig flowConfig;
+    protected final XFlowConfig flowConfig;
 
-    private final Map<NodeTypeEnum, NodeStrategy> nodeMap = new HashMap<>();
+    protected final FlowLock flowLock;
 
-    public NodeStrategyWrapper(ConfigService configService, FlowDataService flowDataService, FlowUserService flowUserService, XFlowConfig flowConfig) {
+    protected final Map<NodeTypeEnum, NodeStrategy> nodeMap = new HashMap<>();
+
+    public NodeStrategyWrapper(ConfigService configService, FlowDataService flowDataService, FlowUserManager flowUserManager,
+                               XFlowConfig flowConfig,
+                               FlowLock flowLock) {
         this.configService = configService;
         this.flowDataService = flowDataService;
-        this.flowUserService = flowUserService;
+        this.flowUserManager = flowUserManager;
         this.flowConfig = flowConfig;
+        this.flowLock = flowLock;
 
         nodeMap.put(NodeTypeEnum.start, new StartNodeStrategy(configService, flowDataService, this));
         nodeMap.put(NodeTypeEnum.end, new EndNodeStrategy(configService, flowDataService, this));
@@ -48,6 +51,7 @@ public class NodeStrategyWrapper implements NodeStrategy {
         nodeMap.put(NodeTypeEnum.jointly, new JointlyNodeStrategy(configService, flowDataService, this));
         nodeMap.put(NodeTypeEnum.vote, new VoteNodeStrategy(configService, flowDataService, this));
         nodeMap.put(NodeTypeEnum.condition, new ConditionNodeStrategy(configService, flowDataService, this));
+
     }
 
     @Override
@@ -63,36 +67,63 @@ public class NodeStrategyWrapper implements NodeStrategy {
             actualCandidates = Collections.singletonList(operator);
         } else {
             String filter = JSONUtils.toJson(node.getData().getFilter());
-            actualCandidates = flowUserService.getUsers(filter, operator, candidates);
+            actualCandidates = flowUserManager.getUsers(filter, operator, candidates);
         }
         return target.createNode(publish, flow, node, prevCurrent, operator, actualCandidates, data);
     }
 
-    public void doApproval(ConfigPublish publish, Long flowId, Long currentId, User operator, List<User> candidates, Map<String, Object> data, FlowTaskLog taskLog) {
-        //如果是委派任务，为委派人创建待办(委派任务完成后需要委派人审核确认)
-        if (TaskTypeEnum.Entrust == taskLog.getType()) {
-            FlowTask entrust = flowDataService.getTaskById(taskLog.getPrevId());
-            flowDataService.createTask(taskLog.getFlowId(), taskLog.getCurrentId(), new User(entrust.getUserId(), entrust.getUserName()), null, TaskTypeEnum.EntrustBack, taskLog.getTaskId());
-            //委派任务返还委派人，不会办结节点
-        } else {
-            Flow flow = flowDataService.getFlowById(flowId);
-            FlowNodeCurrent current = flowDataService.getCurrentById(currentId);
-            this.onApproval(publish, flow, current, operator, candidates, data);
+    public Long doApproval(ConfigPublish publish, FlowTask task, User operator, List<User> candidates, Map<String, Object> data, String remark) {
+        try{
+            flowLock.tryLock(task.getCurrentId());
+            //完成待办
+            FlowTaskLog taskLog = flowDataService.finishTask(task, operator, TaskActionEnum.Approved, remark);
+            //后续处理
+            Long flowId = taskLog.getFlowId();
+            Long currentId = taskLog.getCurrentId();
+
+            //如果是委派任务，为委派人创建待办(委派任务完成后需要委派人审核确认)
+            if (TaskTypeEnum.Entrust == taskLog.getType()) {
+                FlowTask entrust = flowDataService.getTaskById(taskLog.getPrevId());
+                flowDataService.createTask(taskLog.getFlowId(), taskLog.getCurrentId(), new User(entrust.getUserId(), entrust.getUserName()), null, TaskTypeEnum.EntrustBack, taskLog.getTaskId());
+                //委派任务返还委派人，不会办结节点
+            } else {
+                Flow flow = flowDataService.getFlowById(flowId);
+                FlowNodeCurrent current = flowDataService.getCurrentById(currentId);
+                this.onApproval(publish, flow, current, operator, candidates, data);
+            }
+            return flowId;
+        }finally {
+            flowLock.unLock(task.getCurrentId());
         }
     }
 
-    public void doReject(ConfigPublish publish, Long flowId, Long currentId, User operator, List<User> candidates, Map<String, Object> data, FlowTaskLog taskLog) {
-        //如果是委派任务，为委派人创建待办(委派任务完成后需要委派人审核确认)
-        if (TaskTypeEnum.Entrust == taskLog.getType()) {
-            //委派任务返还委派人，不会办结节点
-            FlowTask entrust = flowDataService.getTaskById(taskLog.getPrevId());
-            flowDataService.createTask(taskLog.getFlowId(), taskLog.getCurrentId(), new User(entrust.getUserId(), entrust.getUserName()), null, TaskTypeEnum.EntrustBack, taskLog.getTaskId());
-        } else {
-            //委派给具体的节点策略处理
-            Flow flow = flowDataService.getFlowById(flowId);
-            FlowNodeCurrent current = flowDataService.getCurrentById(currentId);
-            this.onReject(publish, flow, current, operator, candidates, data);
+    public Long doReject(ConfigPublish publish, FlowTask task, User operator, List<User> candidates, Map<String, Object> data, String remark) {
+        try{
+            flowLock.tryLock(task.getCurrentId());
+            //完成待办
+            FlowTaskLog taskLog = flowDataService.finishTask(task, operator, TaskActionEnum.Reject, remark);
+            //后续处理
+            Long flowId = taskLog.getFlowId();
+            Long currentId = taskLog.getCurrentId();
+
+            //如果是委派任务，为委派人创建待办(委派任务完成后需要委派人审核确认)
+            if (TaskTypeEnum.Entrust == taskLog.getType()) {
+                //委派任务返还委派人，不会办结节点
+                FlowTask entrust = flowDataService.getTaskById(taskLog.getPrevId());
+                flowDataService.createTask(taskLog.getFlowId(), taskLog.getCurrentId(), new User(entrust.getUserId(), entrust.getUserName()), null, TaskTypeEnum.EntrustBack, taskLog.getTaskId());
+            } else {
+                //委派给具体的节点策略处理
+                Flow flow = flowDataService.getFlowById(flowId);
+                FlowNodeCurrent current = flowDataService.getCurrentById(currentId);
+                this.onReject(publish, flow, current, operator, candidates, data);
+            }
+
+            return flowId;
+        }finally {
+            flowLock.unLock(task.getCurrentId());
         }
+
+
     }
 
     @Override

@@ -43,8 +43,8 @@ public class XFlowEngine {
     public Result<FlowInfo> approval(Long taskId, User operator, String remark, Map<String, Object> data, List<User> candidates) {
         ConfigPublish publish = configService.getPublishByTaskId(taskId);
         try{
-            FlowTaskLog taskLog = actionService.approval(publish, taskId, operator, candidates, remark, data);
-            FlowInfo flowInfo = flowDataService.getFlowCurrent(taskLog.getFlowId());
+            Long flowId = actionService.approval(publish, taskId, operator, candidates, remark, data);
+            FlowInfo flowInfo = flowDataService.getFlowCurrent(flowId);
             return Result.success(flowInfo);
         }catch (InvalidUserException e) {
             return Result.paramError("无权限审核："+ operator.getUserName());
@@ -57,8 +57,8 @@ public class XFlowEngine {
     public Result<FlowInfo> reject(Long taskId, User operator, String remark, Map<String, Object> data, List<User> candidates) {
         ConfigPublish publish = configService.getPublishByTaskId(taskId);
         try{
-            FlowTaskLog taskLog = actionService.reject(publish, taskId, operator, candidates, remark, data);
-            FlowInfo flowInfo = flowDataService.getFlowCurrent(taskLog.getFlowId());
+            Long flowId = actionService.reject(publish, taskId, operator, candidates, remark, data);
+            FlowInfo flowInfo = flowDataService.getFlowCurrent(flowId);
             return Result.success(flowInfo);
         }catch (InvalidUserException e) {
             return Result.paramError("无权限审核："+ operator.getUserName());

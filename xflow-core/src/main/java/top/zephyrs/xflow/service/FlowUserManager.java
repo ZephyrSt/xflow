@@ -10,7 +10,7 @@ import java.util.List;
 /**
  * 根据用户筛选信息获取用户
  */
-public interface FlowUserService {
+public interface FlowUserManager {
 
     /**
      * 根据操作人和人员筛选条件查询后续用户
